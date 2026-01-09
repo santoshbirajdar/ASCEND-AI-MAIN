@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/services/base44Client';
+import { getAICoachResponse } from '../services/geminiClient'; // ✅ NEW: Import Gemini Service
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Bot, User, Sparkles, Loader2, Lightbulb } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 
@@ -24,19 +24,24 @@ export default function AICoach() {
 
     const sendMessage = async (messageText) => {
         if (!messageText.trim() || isLoading) return;
+        
+        // 1. Add User Message to UI
         const userMessage = { role: 'user', content: messageText };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
 
-        // Fixed Template Literal below
-        const response = await base44.integrations.Core.InvokeLLM({
-            prompt: `You are an expert career coach. User Question: ${messageText}`,
-            add_context_from_internet: true
-        });
-
-        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-        setIsLoading(false);
+        try {
+            // 2. ✅ NEW: Call Gemini API instead of base44
+            const responseText = await getAICoachResponse(messageText);
+            
+            // 3. Add AI Response to UI
+            setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+        } catch (error) {
+            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I'm having trouble connecting. Please try again." }]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -44,7 +49,7 @@ export default function AICoach() {
             <div className="max-w-4xl mx-auto">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 mb-4">
-                        <Sparkles className="w-4 h-4 text-indigo-400" /><span className="text-sm text-indigo-300">AI-Powered</span>
+                        <Sparkles className="w-4 h-4 text-indigo-400" /><span className="text-sm text-indigo-300">Powered by Gemini Pro</span>
                     </div>
                     <h1 className="text-4xl font-bold mb-2">Career Coach</h1>
                     <p className="text-slate-400">Get personalized guidance for your journey</p>
