@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom' // 👈 Added this for smooth navigation
 // Make sure this path matches where you put your supabaseClient.js file
-import { supabase } from '@/lib/supabaseClient' 
+import { supabase } from '../lib/supabaseClient' 
 
 export default function AuthPage() {
+  const navigate = useNavigate() // 👈 Initialize the hook
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,8 +22,8 @@ export default function AuthPage() {
             access_type: 'offline',
             prompt: 'consent',
           },
-          // Supabase handles the redirect to this URL automatically
-          redirectTo: `${window.location.origin}/auth/callback`, 
+          // 👈 CHANGED: Point to Dashboard because you don't have an '/auth/callback' route
+          redirectTo: `${window.location.origin}/dashboard`, 
         },
       })
       if (error) throw error
@@ -44,8 +46,8 @@ export default function AuthPage() {
     if (error) {
       alert(error.message)
     } else {
-      // ✅ UPDATED: Automatically redirect to dashboard on success
-      window.location.href = '/dashboard' 
+      // ✅ UPDATED: Use navigate() for smooth transition without reload
+      navigate('/dashboard')
     }
     setLoading(false)
   }
@@ -58,8 +60,8 @@ export default function AuthPage() {
       email,
       password,
       options: {
-        // Redirect here after they click the email confirmation link
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // 👈 CHANGED: Point to Dashboard to avoid 404s
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       }
     })
     
